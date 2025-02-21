@@ -1,3 +1,4 @@
+/** public component */
 import { Stage, Layer } from "react-konva";
 import Sticky from "react-sticky-el";
 import colors from "tailwindcss/colors";

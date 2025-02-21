@@ -1,3 +1,4 @@
+/** public component */
 import { useState } from "react";
 import colors from "tailwindcss/colors";
 import { Resolution, Task } from "./types";
