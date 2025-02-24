@@ -37,7 +37,7 @@ const tasks: Task[] = [
 
 const App: React.FC = () => {
   return (
-    <div style={{ padding: "20px" }}>
+    <div style={{ padding: "20px", width: "100%", height: "100vh" }}>
       <h1>Sample Gantt Chart</h1>
       <GanttChart
         tasks={tasks}
