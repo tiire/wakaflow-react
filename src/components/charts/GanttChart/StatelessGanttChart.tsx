@@ -264,7 +264,7 @@ export function StatelessGanttChart({
       style={{ position: "relative", width: "100%" }}
     >
       <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel className={`${styles.scrollarea} bg-gray-100 p-4`}> {/* Added styling */}
+        <ResizablePanel className={`${styles.scrollarea} bg-gray-100 p-4`}> 
           <div
             className="h-full bg-gray-100 scrollarea"
             ref={tableScrollRef}
@@ -284,7 +284,7 @@ export function StatelessGanttChart({
                   <ResizablePanel style={{ height: heightChart + headerHeight }}>
                     <Sticky scrollElement=".scrollarea">
                       <div
-                        className={`bg-gray-100 self-stretch px-4 sticky top-0 ${styles.ganttLeftPanelHeaderCell}`} {/* Applied header style */}
+                        className={`bg-gray-100 self-stretch px-4 sticky top-0 ${styles.ganttLeftPanelHeaderCell}`} 
                         style={{ height: headerHeight }}
                       >
                         {col.label}
