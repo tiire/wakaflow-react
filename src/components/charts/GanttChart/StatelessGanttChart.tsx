@@ -68,7 +68,7 @@ export function StatelessGanttChart({
     headerHeight = 20,
     taskStyles = {
       taskColor: colors["green"][300],
-      parentTaskColor: colors["blue"][300],
+      parentTaskColor: colors["blue"][800],
       taskResizeHandleColor: colors["green"][50],
       fontFamily: "Arial",
       cornerRadius: 5,
@@ -79,6 +79,8 @@ export function StatelessGanttChart({
       },
     },
   } = style ?? {};
+
+  console.log("TaskStyles", taskStyles);
 
   const taskTree = useMemo(() => {
     const childrenById: Record<string, { task?: Task; children: string[] }> =
@@ -108,7 +110,7 @@ export function StatelessGanttChart({
       children: string[];
     }): FilledTask => {
       const children = task.children.map((ch) =>
-        getFilledTask(childrenById[ch])
+        getFilledTask(childrenById[ch]),
       );
       const hasChildren = (children ?? []).length > 0;
       return {
@@ -141,7 +143,7 @@ export function StatelessGanttChart({
         }
         pushTasks(
           task.children.sort((a, b) => a.start.getTime() - b.start.getTime()),
-          level + 1
+          level + 1,
         );
       });
     };
@@ -185,7 +187,7 @@ export function StatelessGanttChart({
         setDelta(e.delta[0]);
       },
     },
-    { target: ganttScrollRef }
+    { target: ganttScrollRef },
   );
 
   const [scrolledEle, setScrolledEle] = useState<{
@@ -199,7 +201,7 @@ export function StatelessGanttChart({
     if (
       scrolledEle?.elem === "table" &&
       Math.abs(
-        scrolledEle.scroll.scrollTop - (e.target as HTMLDivElement).scrollTop
+        scrolledEle.scroll.scrollTop - (e.target as HTMLDivElement).scrollTop,
       ) < 10
     ) {
       return;
@@ -216,7 +218,7 @@ export function StatelessGanttChart({
     if (
       scrolledEle?.elem === "gantt" &&
       Math.abs(
-        scrolledEle.scroll.scrollTop - (e.target as HTMLDivElement).scrollTop
+        scrolledEle.scroll.scrollTop - (e.target as HTMLDivElement).scrollTop,
       ) < 10
     ) {
       return;
@@ -362,17 +364,19 @@ export function StatelessGanttChart({
                       const changeStartInMin = Math.floor(
                         ((task?.start.getTime() ?? 0) - start.getTime()) /
                           1000 /
-                          60
+                          60,
                       );
                       const changeEndInMin = Math.floor(
-                        ((task?.end.getTime() ?? 0) - end.getTime()) / 1000 / 60
+                        ((task?.end.getTime() ?? 0) - end.getTime()) /
+                          1000 /
+                          60,
                       );
                       if ((task?.children?.length ?? 0) > 0) {
                         if (changeStartInMin === changeEndInMin) {
                           const change =
                             start.getTime() - task!.start!.getTime();
                           const updateChildren = (
-                            task: FilledTask
+                            task: FilledTask,
                           ): FilledTask[] => {
                             const kids = task.children
                               .map(updateChildren)
@@ -392,10 +396,10 @@ export function StatelessGanttChart({
                               acc[child.id] = child;
                               return acc;
                             },
-                            {} as Record<string, FilledTask>
+                            {} as Record<string, FilledTask>,
                           );
                           const newTasks = tasks.map((tt) =>
-                            updatedById[tt.id] ? updatedById[tt.id] : tt
+                            updatedById[tt.id] ? updatedById[tt.id] : tt,
                           );
                           console.log("AAAA", tasks);
                           console.log(newTasks);
@@ -445,21 +449,24 @@ export function StatelessGanttChart({
                             }
                           };
                           updateChildren(updatedTask);
-                          const updatedById = updated.reduce((acc, child) => {
-                            acc[child.id] = child;
-                            return acc;
-                          }, {} as Record<string, FilledTask>);
+                          const updatedById = updated.reduce(
+                            (acc, child) => {
+                              acc[child.id] = child;
+                              return acc;
+                            },
+                            {} as Record<string, FilledTask>,
+                          );
                           setTasks(
                             tasks.map((tt) =>
-                              updatedById[tt.id] ? updatedById[tt.id] : tt
-                            )
+                              updatedById[tt.id] ? updatedById[tt.id] : tt,
+                            ),
                           );
                         }
                       } else {
                         setTasks(
                           tasks.map((tt) =>
-                            t.id === tt.id ? { ...tt, start, end } : tt
-                          )
+                            t.id === tt.id ? { ...tt, start, end } : tt,
+                          ),
                         );
                       }
                     }}

@@ -45,15 +45,6 @@ const App: React.FC = () => {
           { field: "name", label: "Task Name" },
           { field: "progress", label: "Progress (%)" },
         ]}
-        style={{
-          taskStyles: {
-            taskColor: colors["green"][300],
-            parentTaskColor: colors["yellow"][300],
-            taskResizeHandleColor: colors["green"][50],
-            fontFamily: "Arial",
-            cornerRadius: 5,
-          }
-        }}
       />
     </div>
   );

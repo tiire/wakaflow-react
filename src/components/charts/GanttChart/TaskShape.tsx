@@ -50,6 +50,7 @@ export function TaskShape({
   const tooltipRef = useRef<KonvaGroup | null>(null);
   const rectRef = useRef<any | undefined>(undefined);
   const resizeRectRef = useRef<any | undefined>(undefined);
+  console.log("???", styles);
   const {
     taskColor,
     parentTaskColor, // Added parentTaskColor
@@ -138,7 +139,13 @@ export function TaskShape({
           ref={rectRef}
           width={end - start}
           height={taskHeight - 12}
-          fill={t.children.length > 0 ? (typeof parentTaskColor === "function" ? parentTaskColor(t) : parentTaskColor) : color} // Modified fill
+          fill={
+            t.children.length > 0
+              ? typeof parentTaskColor === "function"
+                ? parentTaskColor(t)
+                : parentTaskColor
+              : color
+          }
           cornerRadius={cornerRadius}
         />
         <Text
@@ -161,7 +168,7 @@ export function TaskShape({
         }}
         onDragEnd={(e) => {
           const newStart = new Date(
-            from.getTime() + Math.floor((e.target.x() * step) / stepWidth)
+            from.getTime() + Math.floor((e.target.x() * step) / stepWidth),
           );
           const width = t.end.getTime() - t.start.getTime();
           const newEnd = new Date(newStart.getTime() + width);
@@ -176,7 +183,13 @@ export function TaskShape({
           height={taskHeight - 12}
           fill="transparent"
           cornerRadius={cornerRadius}
-          stroke={t.children.length > 0 ? (typeof parentTaskColor === "function" ? parentTaskColor(t) : parentTaskColor) : color} // Modified stroke
+          stroke={
+            t.children.length > 0
+              ? typeof parentTaskColor === "function"
+                ? parentTaskColor(t)
+                : parentTaskColor
+              : color
+          } // Modified stroke
           strokeWidth={2}
           scaleX={1}
           onMouseOver={() => {
@@ -205,8 +218,8 @@ export function TaskShape({
             const newStart = new Date(
               from.getTime() +
                 Math.floor(
-                  ((start + resizeRectRef.current.x()) * step) / stepWidth
-                )
+                  ((start + resizeRectRef.current.x()) * step) / stepWidth,
+                ),
             );
             const width =
               (resizeRectRef.current.width() * e.target.scaleX() * step) /
@@ -216,7 +229,7 @@ export function TaskShape({
               newStart,
               newEnd,
               resizeRectRef.current.x(),
-              resizeRectRef.current.width()
+              resizeRectRef.current.width(),
             );
             onDatesChange(newStart, newEnd);
             resizeRectRef.current.scaleX(1);
@@ -232,7 +245,7 @@ export function TaskShape({
             } else {
               anchor.offsetX(
                 (transformAnchorStyle?.offsetX ?? 5) +
-                  (transformAnchorStyle?.width ?? 8)
+                  (transformAnchorStyle?.width ?? 8),
               );
             }
           }}

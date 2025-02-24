@@ -26,6 +26,7 @@ export function GanttChart({
     taskStyles: {
       taskColor: colors["green"][300],
       fontFamily: "Arial",
+      parentTaskColor: colors["blue"][300],
       cornerRadius: 5,
       taskResizeHandleColor: colors["green"][800],
       transformAnchorStyle: {
@@ -59,7 +60,7 @@ export function GanttChart({
       getChartWidthByResolution(
         availableResolutions[availableResolutions.indexOf(resolution) - 1],
         tasks,
-        style.stepWidth!
+        style.stepWidth!,
       ).chartWidth < 32000
     );
   }, [resolution]);
@@ -80,14 +81,14 @@ export function GanttChart({
               setResolution(
                 availableResolutions[
                   availableResolutions.indexOf(resolution) - 1
-                ]
+                ],
               )
             }
             onZoomOut={() =>
               setResolution(
                 availableResolutions[
                   availableResolutions.indexOf(resolution) + 1
-                ]
+                ],
               )
             }
             onExpandAll={() => setCollapsedTasks([])}
