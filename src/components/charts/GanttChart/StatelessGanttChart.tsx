@@ -68,6 +68,7 @@ export function StatelessGanttChart({
     headerHeight = 20,
     taskStyles = {
       taskColor: colors["green"][300],
+      parentTaskColor: colors["blue"][300],
       taskResizeHandleColor: colors["green"][50],
       fontFamily: "Arial",
       cornerRadius: 5,

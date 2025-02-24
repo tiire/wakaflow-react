@@ -12,6 +12,7 @@ import { Group as KonvaGroup } from "konva/lib/Group";
 
 export type TaskShapeStyles = {
   taskColor: string | ((task: Task) => string);
+  parentTaskColor: string | ((task: Task) => string); // Added parentTaskColor
   fontFamily: string;
   cornerRadius: number;
   taskResizeHandleColor: string | ((task: Task) => string);
@@ -51,6 +52,7 @@ export function TaskShape({
   const resizeRectRef = useRef<any | undefined>(undefined);
   const {
     taskColor,
+    parentTaskColor, // Added parentTaskColor
     fontFamily,
     cornerRadius,
     taskResizeHandleColor,
@@ -136,7 +138,7 @@ export function TaskShape({
           ref={rectRef}
           width={end - start}
           height={taskHeight - 12}
-          fill={color}
+          fill={t.children.length > 0 ? (typeof parentTaskColor === "function" ? parentTaskColor(t) : parentTaskColor) : color} // Modified fill
           cornerRadius={cornerRadius}
         />
         <Text
@@ -174,7 +176,7 @@ export function TaskShape({
           height={taskHeight - 12}
           fill="transparent"
           cornerRadius={cornerRadius}
-          stroke={color}
+          stroke={t.children.length > 0 ? (typeof parentTaskColor === "function" ? parentTaskColor(t) : parentTaskColor) : color} // Modified stroke
           strokeWidth={2}
           scaleX={1}
           onMouseOver={() => {
