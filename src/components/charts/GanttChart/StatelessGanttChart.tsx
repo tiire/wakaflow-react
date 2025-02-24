@@ -17,14 +17,23 @@ import { InlineEdit } from "../../ui/inline-edit";
 import { Resolution, Task } from "./types";
 import { TaskShape, TaskShapeStyles } from "./TaskShape";
 import styles from "./index.module.css";
-import { getChartWidthByResolution } from "./utils";
+import {
+  getChartWidthByResolution,
+  getNextResolution,
+  getPrevResolution,
+} from "./utils";
 import { GanttHeader } from "./GanttHeader";
+import { Stage as StageRef } from "konva/lib/Stage";
+import { useGesture } from "@use-gesture/react";
+import { DependencyShape } from "./DependencyShape";
 
 export type StatelessGanttChartProps = {
   tasks: Task[];
+  setTasks: (tasks: Task[]) => void;
   onCollapseTask: (taskId: string, collapsed: boolean) => void;
   collapsedTasks: string[];
   resolution: Resolution;
+  setResolution: (resolution: Resolution) => void;
   columns: {
     field: string;
     label: string;
@@ -47,7 +56,9 @@ export function StatelessGanttChart({
   style,
   columns,
   collapsedTasks,
+  setResolution,
   onCollapseTask,
+  setTasks,
 }: StatelessGanttChartProps) {
   const [cursorPointer, setCursorPointer] = useState(false);
 
@@ -98,14 +109,15 @@ export function StatelessGanttChart({
       const children = task.children.map((ch) =>
         getFilledTask(childrenById[ch])
       );
+      const hasChildren = (children ?? []).length > 0;
       return {
         ...task.task!,
-        start:
-          task.task!.start ??
-          new Date(Math.min(...children.map((ch) => ch.start.getTime()))),
-        end:
-          task.task!.end ??
-          new Date(Math.max(...children.map((ch) => ch.end.getTime()))),
+        start: !hasChildren
+          ? task.task!.start!
+          : new Date(Math.min(...children.map((ch) => ch.start.getTime()))),
+        end: !hasChildren
+          ? task.task!.end!
+          : new Date(Math.max(...children.map((ch) => ch.end.getTime()))),
         children,
       };
     };
@@ -114,7 +126,7 @@ export function StatelessGanttChart({
       .map((t) => getFilledTask(t));
   }, [tasks]);
 
-  const sortedTasks = useMemo(() => {
+  const { sortedTasks, dependencies } = useMemo(() => {
     const sorted: (FilledTask & { level: number; collapsed: boolean })[] = [];
     const pushTasks = (tasks: FilledTask[], level = 0) => {
       tasks.forEach((task) => {
@@ -133,7 +145,21 @@ export function StatelessGanttChart({
       });
     };
     pushTasks(taskTree.sort((a, b) => a.start.getTime() - b.start.getTime()));
-    return sorted;
+    const dependencies = sorted
+      .map((t, ind) => {
+        const deps = t.dependsOn.map((d) => {
+          const depIndex = sorted.findIndex((t) => t.id === d);
+          return {
+            fromTask: sorted[depIndex],
+            toTask: t,
+            fromIndex: depIndex,
+            toIndex: ind,
+          };
+        });
+        return deps;
+      })
+      .flat();
+    return { sortedTasks: sorted, dependencies };
   }, [taskTree, collapsedTasks]);
 
   const rowsNumber = sortedTasks.length;
@@ -143,9 +169,40 @@ export function StatelessGanttChart({
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const ganttScrollRef = useRef<HTMLDivElement>(null);
 
-  const [scrolledEle, setScrolledEle] = useState<any>(null);
+  const [delta, setDelta] = useState(0);
+
+  useGesture(
+    {
+      onPinchEnd: () => {
+        if (delta < 0) {
+          setResolution(getNextResolution(resolution));
+        } else {
+          setResolution(getPrevResolution(resolution, tasks, stepWidth));
+        }
+      },
+      onPinch: (e) => {
+        setDelta(e.delta[0]);
+      },
+    },
+    { target: ganttScrollRef }
+  );
+
+  const [scrolledEle, setScrolledEle] = useState<{
+    elem: "table" | "gantt";
+    scroll: {
+      scrollTop: number;
+    };
+  } | null>(null);
 
   const handleScrollTable = useCallback((e: any) => {
+    if (
+      scrolledEle?.elem === "table" &&
+      Math.abs(
+        scrolledEle.scroll.scrollTop - (e.target as HTMLDivElement).scrollTop
+      ) < 10
+    ) {
+      return;
+    }
     setScrolledEle({
       elem: "table",
       scroll: {
@@ -155,6 +212,14 @@ export function StatelessGanttChart({
   }, []);
 
   const handleScrollGantt = useCallback((e: any) => {
+    if (
+      scrolledEle?.elem === "gantt" &&
+      Math.abs(
+        scrolledEle.scroll.scrollTop - (e.target as HTMLDivElement).scrollTop
+      ) < 10
+    ) {
+      return;
+    }
     setScrolledEle({
       elem: "gantt",
       scroll: {
@@ -186,12 +251,13 @@ export function StatelessGanttChart({
     } else {
       ganttScrollRef.current?.addEventListener("scroll", handleScrollGantt);
     }
-  }, [scrolledEle]);
-  const { chartWidth, step, from, to, minDate } = getChartWidthByResolution(
-    resolution,
-    taskTree,
-    stepWidth
-  );
+  }, [scrolledEle?.scroll.scrollTop, scrolledEle?.elem]);
+
+  const stageRef = useRef<StageRef>(null);
+
+  const { chartWidth, step, from, to, minDate, pixelInMinResolution } =
+    getChartWidthByResolution(resolution, taskTree, stepWidth);
+
   return (
     <div
       className="flex w-full bg-green-400 h-full"
@@ -275,23 +341,127 @@ export function StatelessGanttChart({
           <div
             ref={ganttScrollRef}
             style={{ overflowY: "scroll", height: "100%" }}
-            onScroll={handleScrollGantt}
           >
             <GanttHeader
               scrollToDate={minDate.getTime()}
-              chartWidth={chartWidth}
               headerHeight={headerHeight}
               resolution={resolution}
               fromDate={from}
               toDate={to}
-              taskHeight={taskHeight}
-              stepWidth={stepWidth}
+              pixelInMinResolution={pixelInMinResolution}
             />
-            <Stage width={chartWidth} height={heightChart}>
+            <Stage width={chartWidth} height={heightChart} ref={stageRef}>
               <Layer>
                 {sortedTasks.map((t, ind) => (
                   <TaskShape
                     key={t.id}
+                    onDatesChange={(start, end) => {
+                      // if the task has children, update the children's start and end dates
+                      const task = sortedTasks.find((task) => t.id === task.id);
+                      const changeStartInMin = Math.floor(
+                        ((task?.start.getTime() ?? 0) - start.getTime()) /
+                          1000 /
+                          60
+                      );
+                      const changeEndInMin = Math.floor(
+                        ((task?.end.getTime() ?? 0) - end.getTime()) / 1000 / 60
+                      );
+                      if ((task?.children?.length ?? 0) > 0) {
+                        if (changeStartInMin === changeEndInMin) {
+                          const change =
+                            start.getTime() - task!.start!.getTime();
+                          const updateChildren = (
+                            task: FilledTask
+                          ): FilledTask[] => {
+                            const kids = task.children
+                              .map(updateChildren)
+                              .flat();
+                            return [
+                              ...kids,
+                              {
+                                ...task,
+                                start: new Date(task.start!.getTime() + change),
+                                end: new Date(task.end!.getTime() + change),
+                              },
+                            ];
+                          };
+                          const updatedChildren = updateChildren(task!);
+                          const updatedById = updatedChildren.reduce(
+                            (acc, child) => {
+                              acc[child.id] = child;
+                              return acc;
+                            },
+                            {} as Record<string, FilledTask>
+                          );
+                          const newTasks = tasks.map((tt) =>
+                            updatedById[tt.id] ? updatedById[tt.id] : tt
+                          );
+                          console.log("AAAA", tasks);
+                          console.log(newTasks);
+                          setTasks(newTasks);
+                        } else {
+                          const updatedTask = {
+                            ...task!,
+                            start: start,
+                            end: end,
+                          };
+                          const updated: FilledTask[] = [updatedTask];
+                          const updateChildren = (upTask: FilledTask): void => {
+                            if (upTask.children.length === 0) {
+                              return;
+                            }
+                            const first = {
+                              ...upTask.children[0],
+                              start: upTask.start,
+                            };
+                            if (upTask.children.length > 1) {
+                              const last = {
+                                ...upTask.children[upTask.children.length - 1],
+                                end: upTask.end,
+                              };
+                              if (first.start.getTime() > first.end.getTime()) {
+                                const temp = first.start;
+                                first.start = first.end;
+                                first.end = temp;
+                              }
+                              if (last.start.getTime() > last.end.getTime()) {
+                                const temp = last.start;
+                                last.start = last.end;
+                                last.end = temp;
+                              }
+                              updated.push(first);
+                              updated.push(last);
+                              updateChildren(first);
+                            } else {
+                              const last = { ...first, end: upTask.end };
+                              if (last.start.getTime() > last.end.getTime()) {
+                                const temp = last.start;
+                                last.start = last.end;
+                                last.end = temp;
+                              }
+                              updated.push(last);
+                              updateChildren(last);
+                            }
+                          };
+                          updateChildren(updatedTask);
+                          const updatedById = updated.reduce((acc, child) => {
+                            acc[child.id] = child;
+                            return acc;
+                          }, {} as Record<string, FilledTask>);
+                          setTasks(
+                            tasks.map((tt) =>
+                              updatedById[tt.id] ? updatedById[tt.id] : tt
+                            )
+                          );
+                        }
+                      } else {
+                        setTasks(
+                          tasks.map((tt) =>
+                            t.id === tt.id ? { ...tt, start, end } : tt
+                          )
+                        );
+                      }
+                    }}
                     ind={ind}
                     styles={taskStyles}
                     from={from}
@@ -299,7 +469,17 @@ export function StatelessGanttChart({
                     setCursorPointer={setCursorPointer}
                     task={t}
                     taskHeight={taskHeight}
-                    stepWidth={stepWidth}
+                    stepWidth={pixelInMinResolution}
+                  />
+                ))}
+                {dependencies.map((d) => (
+                  <DependencyShape
+                    key={d.fromTask.id + d.toTask.id}
+                    {...d}
+                    from={from}
+                    step={step}
+                    stepWidth={pixelInMinResolution}
+                    taskHeight={taskHeight}
                   />
                 ))}
               </Layer>

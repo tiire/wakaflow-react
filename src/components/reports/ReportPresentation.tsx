@@ -2,7 +2,7 @@ import { Report, DataProvider } from "../../types/report";
 import { Button } from "../ui/button";
 import DateRangePicker from "../ui/date-range-picker";
 import { Label } from "../ui/label";
-import "../styles/global.css";
+import "../../styles/global.css";
 import {
   Select,
   SelectContent,
