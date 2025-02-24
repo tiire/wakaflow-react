@@ -264,9 +264,9 @@ export function StatelessGanttChart({
       style={{ position: "relative", width: "100%" }}
     >
       <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel className={styles.scrollarea}>
+        <ResizablePanel className={`${styles.scrollarea} bg-gray-100 p-4`}> {/* Added styling */}
           <div
-            className="h-full bg-red-100 scrollarea"
+            className="h-full bg-gray-100 scrollarea"
             ref={tableScrollRef}
             onScroll={handleScrollTable}
             style={{
@@ -281,12 +281,10 @@ export function StatelessGanttChart({
             >
               {columns.map((col, ind) => (
                 <React.Fragment key={ind}>
-                  <ResizablePanel
-                    style={{ height: heightChart + headerHeight }}
-                  >
+                  <ResizablePanel style={{ height: heightChart + headerHeight }}>
                     <Sticky scrollElement=".scrollarea">
                       <div
-                        className="bg-red-100 self-stretch px-4 sticky top-0"
+                        className={`bg-gray-100 self-stretch px-4 sticky top-0 ${styles.ganttLeftPanelHeaderCell}`} {/* Applied header style */}
                         style={{ height: headerHeight }}
                       >
                         {col.label}
@@ -294,11 +292,11 @@ export function StatelessGanttChart({
                     </Sticky>
                     {sortedTasks.map((t) => (
                       <div
-                        className="w-full border-b-1 border-indigo-500 flex items-center"
+                        className={`w-full border-b-1 border-gray-300 flex items-center ${styles.ganttLeftPanelCell}`} {/* Applied cell style */}
                         style={{ height: `${taskHeight}px` }}
                         key={t.id}
                       >
-                        <div className="bg-red-100 px-4 m-auto text-center flex">
+                        <div className="bg-gray-100 px-4 m-auto text-center flex">
                           {ind == 0 && (
                             <>
                               <span
