@@ -34,80 +34,75 @@ export function GanttToolbar({
   },
 }: ToolbarProps) {
   return (
-    <div className="w-full bg-background border-b">
-      <div className="container mx-auto px-4">
+    <div className="w-full bg-background border-b flex justify-left">
+      <div className="container px-4">
         <div className="flex items-center h-12">
-          <TooltipProvider>
-            <div className="flex space-x-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onZoomIn}
-                    disabled={!actionsEnabled.zoomIn}
-                  >
-                    <ZoomIn className="h-4 w-4" />
-                    <span className="sr-only">Zoom In</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Zoom In</p>
-                </TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onZoomOut}
-                    disabled={!actionsEnabled.zoomOut}
-                  >
-                    <ZoomOut className="h-4 w-4" />
-                    <span className="sr-only">Zoom Out</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Zoom Out</p>
-                </TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onExpandAll}
-                    disabled={!actionsEnabled.expandAll}
-                  >
-                    <Maximize2 className="h-4 w-4" />
-                    <span className="sr-only">Expand All</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Expand All</p>
-                </TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onCollapseAll}
-                    disabled={!actionsEnabled.collapseAll}
-                  >
-                    <Minimize2 className="h-4 w-4" />
-                    <span className="sr-only">Collapse All</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Collapse All</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          </TooltipProvider>
+          <div className="flex space-x-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onZoomIn}
+                  disabled={!actionsEnabled.zoomIn}
+                >
+                  <ZoomIn className="h-4 w-4" />
+                  <span className="sr-only">Zoom In</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Zoom In</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onZoomOut}
+                  disabled={!actionsEnabled.zoomOut}
+                >
+                  <ZoomOut className="h-4 w-4" />
+                  <span className="sr-only">Zoom Out</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Zoom Out</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onExpandAll}
+                  disabled={!actionsEnabled.expandAll}
+                >
+                  <Maximize2 className="h-4 w-4" />
+                  <span className="sr-only">Expand All</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Expand All</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onCollapseAll}
+                  disabled={!actionsEnabled.collapseAll}
+                >
+                  <Minimize2 className="h-4 w-4" />
+                  <span className="sr-only">Collapse All</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Collapse All</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </div>
       </div>
     </div>

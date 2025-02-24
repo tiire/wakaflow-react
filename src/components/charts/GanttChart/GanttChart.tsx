@@ -1,11 +1,12 @@
 /** public component */
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import colors from "tailwindcss/colors";
 import { Resolution, Task } from "./types";
 import { StatelessGanttChart } from "./StatelessGanttChart";
 import { GanttToolbar } from "./GanttToolbar";
 import { getChartWidthByResolution } from "./utils";
 import { TaskShapeStyles } from "./TaskShape";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const availableResolutions: Resolution[] = [
   "hour",
@@ -26,11 +27,11 @@ export function GanttChart({
       taskColor: colors["green"][300],
       fontFamily: "Arial",
       cornerRadius: 5,
-      taskResizeHandleColor: colors["blue"][200],
+      taskResizeHandleColor: colors["green"][800],
       transformAnchorStyle: {
-        width: 10,
-        cornerRadius: 5,
-        offsetX: 5,
+        width: 6,
+        cornerRadius: 2,
+        offsetX: 2,
       },
     },
   },
@@ -51,56 +52,68 @@ export function GanttChart({
 }) {
   const [resolution, setResolution] = useState<Resolution>("day");
   const [collapsedTasks, setCollapsedTasks] = useState<string[]>([]);
-  
+  const [currentTasks, setCurrentTasks] = useState<Task[]>(tasks);
+  const zoomEnabled = useMemo(() => {
+    return (
+      availableResolutions.indexOf(resolution) > 0 &&
+      getChartWidthByResolution(
+        availableResolutions[availableResolutions.indexOf(resolution) - 1],
+        tasks,
+        style.stepWidth!
+      ).chartWidth < 32000
+    );
+  }, [resolution]);
   return (
-    <div className="flex flex-col gap-0 w-full h-full">
-      <div className="w-full">
-        <GanttToolbar
-          actionsEnabled={{
-            zoomIn:
-              availableResolutions.indexOf(resolution) > 0 &&
-              getChartWidthByResolution(
+    <TooltipProvider>
+      <div className="flex flex-col gap-0 w-full h-full">
+        <div className="w-full">
+          <GanttToolbar
+            actionsEnabled={{
+              zoomIn: zoomEnabled,
+              zoomOut:
+                availableResolutions.indexOf(resolution) <
+                availableResolutions.length - 1,
+              expandAll: true,
+              collapseAll: true,
+            }}
+            onZoomIn={() =>
+              setResolution(
                 availableResolutions[
                   availableResolutions.indexOf(resolution) - 1
-                ],
-                tasks,
-                style.stepWidth!
-              ).chartWidth < 32000,
-            zoomOut:
-              availableResolutions.indexOf(resolution) <
-              availableResolutions.length - 1,
-            expandAll: true,
-            collapseAll: true,
+                ]
+              )
+            }
+            onZoomOut={() =>
+              setResolution(
+                availableResolutions[
+                  availableResolutions.indexOf(resolution) + 1
+                ]
+              )
+            }
+            onExpandAll={() => setCollapsedTasks([])}
+            onCollapseAll={() =>
+              setCollapsedTasks(tasks.map((task) => task.id))
+            }
+          />
+        </div>
+        <StatelessGanttChart
+          tasks={currentTasks}
+          setTasks={setCurrentTasks}
+          setResolution={setResolution}
+          onCollapseTask={(taskId, collapsed) => {
+            setCollapsedTasks((prev) => {
+              if (collapsed) {
+                return [...prev, taskId];
+              }
+              return prev.filter((id) => id !== taskId);
+            });
           }}
-          onZoomIn={() =>
-            setResolution(
-              availableResolutions[availableResolutions.indexOf(resolution) - 1]
-            )
-          }
-          onZoomOut={() =>
-            setResolution(
-              availableResolutions[availableResolutions.indexOf(resolution) + 1]
-            )
-          }
-          onExpandAll={() => setCollapsedTasks([])}
-          onCollapseAll={() => setCollapsedTasks(tasks.map((task) => task.id))}
+          style={style}
+          collapsedTasks={collapsedTasks}
+          resolution={resolution}
+          columns={columns}
         />
       </div>
-      <StatelessGanttChart
-        tasks={tasks}
-        onCollapseTask={(taskId, collapsed) => {
-          setCollapsedTasks((prev) => {
-            if (collapsed) {
-              return [...prev, taskId];
-            }
-            return prev.filter((id) => id !== taskId);
-          });
-        }}
-        style={style}
-        collapsedTasks={collapsedTasks}
-        resolution={resolution}
-        columns={columns}
-      />
-    </div>
+    </TooltipProvider>
   );
 }
