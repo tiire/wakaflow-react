@@ -6,14 +6,9 @@ import dts from "vite-plugin-dts";
 
 export default defineConfig({
   build: {
-    //Specifies that the output of the build will be a library.
     lib: {
-      //Defines the entry point for the library build. It resolves
-      //to src/index.ts,indicating that the library starts from this file.
-      entry: path.resolve(__dirname, "src/index.ts"),
+      entry: path.resolve(__dirname, "src/App.tsx"), // Changed from "src/index.ts" to "src/App.tsx"
       name: "Wakaflow UI",
-      //A function that generates the output file
-      //name for different formats during the build
       fileName: (format) => `index.${format}.js`,
     },
     rollupOptions: {
@@ -25,15 +20,9 @@ export default defineConfig({
         },
       },
     },
-    //Generates sourcemaps for the built files,
-    //aiding in debugging.
     sourcemap: true,
-    //Clears the output directory before building.
     emptyOutDir: true,
   },
-  //react() enables React support.
-  //dts() generates TypeScript declaration files (*.d.ts)
-  //during the build.
   plugins: [
     react(),
     dts({
@@ -48,10 +37,5 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  css: {
-    // Any special CSS options can go here
-    modules: {
-      // CSS modules options if you're using them
-    },
-  }
+  css: {},
 });
