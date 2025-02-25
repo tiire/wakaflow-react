@@ -446,7 +446,7 @@ export const GanttChartStory: Story = () => {
       )
   );
   return (
-    <div style={{ width: "100%", backgroundColor: "red", height: "500px" }}>
+    <div style={{ width: "100%", height: "500px" }}>
       <GanttChart
         tasks={tasks}
         columns={[

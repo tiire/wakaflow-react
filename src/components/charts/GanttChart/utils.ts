@@ -49,9 +49,11 @@ export function getChartWidthByResolution(
   const nextResolution =
     resolutionArray[resolutionArray.indexOf(resolution) + 1] ?? resolution;
 
-  const from = resolutionMap[nextResolution].add(
-    resolutionMap[resolution].startOf(minDate),
-    -1
+  const from = resolutionMap[nextResolution].startOfResolution(
+    resolutionMap[nextResolution].add(
+      resolutionMap[resolution].startOf(minDate),
+      -1
+    )
   );
   const maxDate = Math.max(
     ...tasks.filter((t) => t.end).map((task) => task.end!.getTime())
@@ -65,8 +67,9 @@ export function getChartWidthByResolution(
     -1
   );
 
-  const pixelInMinResolution =
-    stepWidth / resolutionMap[resolution].numberOfMinResolution(minDate);
+  const pixelInMinResolution = Math.ceil(
+    stepWidth / resolutionMap[resolution].numberOfMinResolution(minDate)
+  );
   const chartWidth =
     resolutionMap[resolution].differenceInMinResolution(from, to) *
     pixelInMinResolution;
@@ -84,3 +87,59 @@ export function getChartWidthByResolution(
     ),
   };
 }
+
+export const getHeaderCells = (
+  fromDate: Date,
+  toDate: Date,
+  resolution: "hour" | "day" | "week" | "month" | "year"
+) => {
+  const {
+    startOf,
+    startOfResolution,
+    differenceInMinResolution,
+    addMinResolution,
+  } = resolutionMap[resolution];
+
+  const hours: Date[] = Array.from(
+    { length: differenceInMinResolution(fromDate, toDate) + 1 },
+    (_, i) => {
+      const date = addMinResolution(fromDate, i);
+      return date;
+    }
+  );
+
+  const cells: { start: Date; end: Date; count: number }[] = hours.reduce(
+    (acc, cell) => {
+      const start = startOfResolution(cell);
+      if (
+        !acc.length ||
+        acc[acc.length - 1].start.getTime() !== start.getTime()
+      ) {
+        acc.push({ start, end: cell, count: 1 });
+      } else {
+        acc[acc.length - 1].end = cell;
+        acc[acc.length - 1].count++;
+      }
+      return acc;
+    },
+    [] as { start: Date; end: Date; count: number }[]
+  );
+
+  const parentCells: { start: Date; end: Date; count: number }[] = hours.reduce(
+    (acc, cell) => {
+      const start = startOf(cell);
+      if (
+        !acc.length ||
+        acc[acc.length - 1].start.getTime() !== start.getTime()
+      ) {
+        acc.push({ start, end: cell, count: 1 });
+      } else {
+        acc[acc.length - 1].end = cell;
+        acc[acc.length - 1].count++;
+      }
+      return acc;
+    },
+    [] as { start: Date; end: Date; count: number }[]
+  );
+  return { cells, parentCells };
+};

@@ -9,9 +9,16 @@ import { Input } from "@/components/ui/input";
 interface InlineEditProps {
   value: string;
   onSave: (newValue: string) => void;
+  className?: string;
+  style?: React.CSSProperties;
 }
 
-export function InlineEdit({ value, onSave }: InlineEditProps) {
+export function InlineEdit({
+  value,
+  onSave,
+  className,
+  style,
+}: InlineEditProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedValue, setEditedValue] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -70,7 +77,8 @@ export function InlineEdit({ value, onSave }: InlineEditProps) {
   return (
     <div
       onClick={handleEdit}
-      className="cursor-pointer w-full text-center p-1 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+      style={{ ...style }}
+      className={`cursor-pointer w-full text-left px-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm ${className}`}
     >
       {value}
     </div>

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useRef, useState } from "react";
 import { Html } from "react-konva-utils";
-import { Group, Rect, Text, Transformer } from "react-konva";
+import { Group, Rect, RegularPolygon, Text, Transformer } from "react-konva";
 import { Task } from "./types";
 import {
   Popover,
@@ -50,7 +50,6 @@ export function TaskShape({
   const tooltipRef = useRef<KonvaGroup | null>(null);
   const rectRef = useRef<any | undefined>(undefined);
   const resizeRectRef = useRef<any | undefined>(undefined);
-  console.log("???", styles);
   const {
     taskColor,
     parentTaskColor, // Added parentTaskColor
@@ -168,13 +167,45 @@ export function TaskShape({
         }}
         onDragEnd={(e) => {
           const newStart = new Date(
-            from.getTime() + Math.floor((e.target.x() * step) / stepWidth),
+            from.getTime() + Math.floor((e.target.x() * step) / stepWidth)
           );
           const width = t.end.getTime() - t.start.getTime();
           const newEnd = new Date(newStart.getTime() + width);
           onDatesChange(newStart, newEnd);
         }}
       >
+        {t.children.length > 0 && (
+          <>
+            <RegularPolygon
+              x={3}
+              y={taskHeight - 13}
+              fill={
+                t.children.length > 0
+                  ? typeof parentTaskColor === "function"
+                    ? parentTaskColor(t)
+                    : parentTaskColor
+                  : color
+              }
+              rotation={90}
+              sides={3}
+              radius={8}
+            />
+            <RegularPolygon
+              x={end - start - 3}
+              y={taskHeight - 13}
+              fill={
+                t.children.length > 0
+                  ? typeof parentTaskColor === "function"
+                    ? parentTaskColor(t)
+                    : parentTaskColor
+                  : color
+              }
+              rotation={-90}
+              sides={3}
+              radius={8}
+            />
+          </>
+        )}
         <Rect
           x={0}
           y={0}
@@ -218,19 +249,13 @@ export function TaskShape({
             const newStart = new Date(
               from.getTime() +
                 Math.floor(
-                  ((start + resizeRectRef.current.x()) * step) / stepWidth,
-                ),
+                  ((start + resizeRectRef.current.x()) * step) / stepWidth
+                )
             );
             const width =
               (resizeRectRef.current.width() * e.target.scaleX() * step) /
               stepWidth;
             const newEnd = new Date(newStart.getTime() + width);
-            console.log(
-              newStart,
-              newEnd,
-              resizeRectRef.current.x(),
-              resizeRectRef.current.width(),
-            );
             onDatesChange(newStart, newEnd);
             resizeRectRef.current.scaleX(1);
             resizeRectRef.current.x(0);
@@ -245,7 +270,7 @@ export function TaskShape({
             } else {
               anchor.offsetX(
                 (transformAnchorStyle?.offsetX ?? 5) +
-                  (transformAnchorStyle?.width ?? 8),
+                  (transformAnchorStyle?.width ?? 8)
               );
             }
           }}

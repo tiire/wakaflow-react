@@ -1,8 +1,10 @@
 /** public component */
-import { Stage, Layer } from "react-konva";
+import { Stage, Layer, Line } from "react-konva";
 import Sticky from "react-sticky-el";
 import colors from "tailwindcss/colors";
 import { ChevronRight, ChevronDown } from "lucide-react";
+import { Stage as StageRef } from "konva/lib/Stage";
+import { useGesture } from "@use-gesture/react";
 import "../../../styles/global.css";
 import { ResizableHandle } from "../../ui/resizable";
 import { ResizablePanel, ResizablePanelGroup } from "../../ui/resizable";
@@ -19,12 +21,11 @@ import { TaskShape, TaskShapeStyles } from "./TaskShape";
 import styles from "./index.module.css";
 import {
   getChartWidthByResolution,
+  getHeaderCells,
   getNextResolution,
   getPrevResolution,
 } from "./utils";
 import { GanttHeader } from "./GanttHeader";
-import { Stage as StageRef } from "konva/lib/Stage";
-import { useGesture } from "@use-gesture/react";
 import { DependencyShape } from "./DependencyShape";
 
 export type StatelessGanttChartProps = {
@@ -68,7 +69,7 @@ export function StatelessGanttChart({
     headerHeight = 20,
     taskStyles = {
       taskColor: colors["green"][300],
-      parentTaskColor: colors["blue"][800],
+      parentTaskColor: colors["blue"][300],
       taskResizeHandleColor: colors["green"][50],
       fontFamily: "Arial",
       cornerRadius: 5,
@@ -79,8 +80,6 @@ export function StatelessGanttChart({
       },
     },
   } = style ?? {};
-
-  console.log("TaskStyles", taskStyles);
 
   const taskTree = useMemo(() => {
     const childrenById: Record<string, { task?: Task; children: string[] }> =
@@ -110,7 +109,7 @@ export function StatelessGanttChart({
       children: string[];
     }): FilledTask => {
       const children = task.children.map((ch) =>
-        getFilledTask(childrenById[ch]),
+        getFilledTask(childrenById[ch])
       );
       const hasChildren = (children ?? []).length > 0;
       return {
@@ -143,7 +142,7 @@ export function StatelessGanttChart({
         }
         pushTasks(
           task.children.sort((a, b) => a.start.getTime() - b.start.getTime()),
-          level + 1,
+          level + 1
         );
       });
     };
@@ -171,7 +170,7 @@ export function StatelessGanttChart({
 
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const ganttScrollRef = useRef<HTMLDivElement>(null);
-
+  const containerRef = useRef<HTMLDivElement>(null);
   const [delta, setDelta] = useState(0);
 
   useGesture(
@@ -187,7 +186,7 @@ export function StatelessGanttChart({
         setDelta(e.delta[0]);
       },
     },
-    { target: ganttScrollRef },
+    { target: ganttScrollRef }
   );
 
   const [scrolledEle, setScrolledEle] = useState<{
@@ -201,7 +200,7 @@ export function StatelessGanttChart({
     if (
       scrolledEle?.elem === "table" &&
       Math.abs(
-        scrolledEle.scroll.scrollTop - (e.target as HTMLDivElement).scrollTop,
+        scrolledEle.scroll.scrollTop - (e.target as HTMLDivElement).scrollTop
       ) < 10
     ) {
       return;
@@ -218,7 +217,7 @@ export function StatelessGanttChart({
     if (
       scrolledEle?.elem === "gantt" &&
       Math.abs(
-        scrolledEle.scroll.scrollTop - (e.target as HTMLDivElement).scrollTop,
+        scrolledEle.scroll.scrollTop - (e.target as HTMLDivElement).scrollTop
       ) < 10
     ) {
       return;
@@ -258,18 +257,40 @@ export function StatelessGanttChart({
 
   const stageRef = useRef<StageRef>(null);
 
-  const { chartWidth, step, from, to, minDate, pixelInMinResolution } =
+  const { chartWidth, from, to, minDate, pixelInMinResolution, step } =
     getChartWidthByResolution(resolution, taskTree, stepWidth);
 
+  const theHeight = useMemo(
+    () =>
+      containerRef.current?.clientHeight
+        ? containerRef.current?.clientHeight - headerHeight
+        : heightChart,
+    [headerHeight, heightChart]
+  );
+
+  const lines = useMemo(
+    () =>
+      Array.from({
+        length: Math.floor(heightChart / taskHeight) + 1,
+      }),
+    [heightChart, taskHeight]
+  );
+
+  const { cells, parentCells } = useMemo(
+    () => getHeaderCells(from, to, resolution),
+    [from, to, resolution]
+  );
+  console.log("cells", cells);
   return (
     <div
-      className="flex w-full bg-green-400 h-full"
+      className="flex w-full h-full"
       style={{ position: "relative", width: "100%" }}
+      ref={containerRef}
     >
       <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel className={`${styles.scrollarea} bg-gray-100 p-4`}>
+        <ResizablePanel className={`${styles.scrollarea} p-0`}>
           <div
-            className="h-full bg-gray-100 scrollarea"
+            className="h-full scrollarea"
             ref={tableScrollRef}
             onScroll={handleScrollTable}
             style={{
@@ -289,20 +310,39 @@ export function StatelessGanttChart({
                   >
                     <Sticky scrollElement=".scrollarea">
                       <div
-                        className={`bg-gray-100 self-stretch px-4 sticky top-0 ${styles.ganttLeftPanelHeaderCell}`}
-                        style={{ height: headerHeight }}
+                        className={`hover:bg-gray-100 dark:hover:bg-gray-800 text-left border-b-1 self-stretch sticky top-0 truncate ${styles.ganttLeftPanelHeaderCell}`}
+                        style={{
+                          maxHeight: `${headerHeight}px`,
+                          minHeight: `${headerHeight}px`,
+                          lineHeight: `${headerHeight}px`,
+                        }}
                       >
-                        {col.label}
+                        <span className="pl-2 m-auto text-left text-sm font-bold">
+                          {col.label}
+                        </span>
                       </div>
                     </Sticky>
                     {sortedTasks.map((t) => (
                       <div
-                        className={`w-full border-b-1 border-gray-300 flex items-center ${styles.ganttLeftPanelCell}`}
-                        style={{ height: `${taskHeight}px` }}
+                        className={`border-b-1 border-gray-300 flex items-center ${styles.ganttLeftPanelCell}`}
+                        style={{
+                          height: `${taskHeight}px`,
+                          maxHeight: `${taskHeight}px`,
+                          minHeight: `${taskHeight}px`,
+                          lineHeight: `${taskHeight}px`,
+                        }}
                         key={t.id}
                       >
-                        <div className="bg-gray-100 px-4 m-auto text-center flex">
-                          {ind == 0 && (
+                        <div
+                          className="text-right flex w-full justify-start items-center truncate"
+                          style={{
+                            height: `${taskHeight}px`,
+                            maxHeight: `${taskHeight}px`,
+                            minHeight: `${taskHeight}px`,
+                            lineHeight: `${taskHeight}px`,
+                          }}
+                        >
+                          {ind === 0 && t.children.length > 0 && (
                             <>
                               <span
                                 className="inline-block4"
@@ -319,17 +359,23 @@ export function StatelessGanttChart({
                               )}
                             </>
                           )}
+                          {t.children.length === 0 && ind === 0 && (
+                            <div style={{ minWidth: `${t.level * 20}px` }} />
+                          )}
                           <InlineEdit
                             value={t[col.field]}
                             onSave={(value) => {
                               console.log(value);
                             }}
+                            style={{ lineHeight: taskHeight }}
                           />
                         </div>
                       </div>
                     ))}
                   </ResizablePanel>
-                  {ind !== columns.length - 1 && <ResizableHandle />}
+                  {ind !== columns.length - 1 && (
+                    <ResizableHandle className="w-0 bg-transparent" />
+                  )}
                 </React.Fragment>
               ))}
             </ResizablePanelGroup>
@@ -337,23 +383,54 @@ export function StatelessGanttChart({
         </ResizablePanel>
         <ResizableHandle />
         <ResizablePanel
-          className={`grow bg-blue-100 ${
-            cursorPointer ? "cursor-pointer" : ""
-          }`}
+          className={`grow ${cursorPointer ? "cursor-pointer" : ""}`}
         >
           <div
             ref={ganttScrollRef}
             style={{ overflowY: "scroll", height: "100%" }}
           >
             <GanttHeader
+              cells={cells}
+              parentCells={parentCells}
               scrollToDate={minDate.getTime()}
               headerHeight={headerHeight}
               resolution={resolution}
-              fromDate={from}
-              toDate={to}
               pixelInMinResolution={pixelInMinResolution}
             />
-            <Stage width={chartWidth} height={heightChart} ref={stageRef}>
+            <Stage width={chartWidth} height={theHeight} ref={stageRef}>
+              <Layer>
+                {lines.map((_, ind) => (
+                  <Line
+                    key={`${resolution}-${ind}`}
+                    points={[1, ind * taskHeight, chartWidth, ind * taskHeight]}
+                    stroke={colors["gray"][300]}
+                    strokeWidth={1}
+                  />
+                ))}
+                {cells
+                  .reduce<{ pix: number; cellsPix: number[] }>(
+                    (acc, cell) => {
+                      return {
+                        pix: acc.pix + cell.count,
+                        cellsPix: acc.cellsPix.concat(acc.pix + cell.count),
+                      };
+                    },
+                    { pix: 0, cellsPix: [] }
+                  )
+                  .cellsPix.map((pix, ind) => (
+                    <Line
+                      key={`${resolution}-${ind}`}
+                      points={[
+                        pix * pixelInMinResolution,
+                        0,
+                        pix * pixelInMinResolution,
+                        theHeight,
+                      ]}
+                      stroke={colors["gray"][200]}
+                      strokeWidth={1}
+                    />
+                  ))}
+              </Layer>
               <Layer>
                 {sortedTasks.map((t, ind) => (
                   <TaskShape
@@ -364,19 +441,17 @@ export function StatelessGanttChart({
                       const changeStartInMin = Math.floor(
                         ((task?.start.getTime() ?? 0) - start.getTime()) /
                           1000 /
-                          60,
+                          60
                       );
                       const changeEndInMin = Math.floor(
-                        ((task?.end.getTime() ?? 0) - end.getTime()) /
-                          1000 /
-                          60,
+                        ((task?.end.getTime() ?? 0) - end.getTime()) / 1000 / 60
                       );
                       if ((task?.children?.length ?? 0) > 0) {
                         if (changeStartInMin === changeEndInMin) {
                           const change =
                             start.getTime() - task!.start!.getTime();
                           const updateChildren = (
-                            task: FilledTask,
+                            task: FilledTask
                           ): FilledTask[] => {
                             const kids = task.children
                               .map(updateChildren)
@@ -396,13 +471,11 @@ export function StatelessGanttChart({
                               acc[child.id] = child;
                               return acc;
                             },
-                            {} as Record<string, FilledTask>,
+                            {} as Record<string, FilledTask>
                           );
                           const newTasks = tasks.map((tt) =>
-                            updatedById[tt.id] ? updatedById[tt.id] : tt,
+                            updatedById[tt.id] ? updatedById[tt.id] : tt
                           );
-                          console.log("AAAA", tasks);
-                          console.log(newTasks);
                           setTasks(newTasks);
                         } else {
                           const updatedTask = {
@@ -449,24 +522,21 @@ export function StatelessGanttChart({
                             }
                           };
                           updateChildren(updatedTask);
-                          const updatedById = updated.reduce(
-                            (acc, child) => {
-                              acc[child.id] = child;
-                              return acc;
-                            },
-                            {} as Record<string, FilledTask>,
-                          );
+                          const updatedById = updated.reduce((acc, child) => {
+                            acc[child.id] = child;
+                            return acc;
+                          }, {} as Record<string, FilledTask>);
                           setTasks(
                             tasks.map((tt) =>
-                              updatedById[tt.id] ? updatedById[tt.id] : tt,
-                            ),
+                              updatedById[tt.id] ? updatedById[tt.id] : tt
+                            )
                           );
                         }
                       } else {
                         setTasks(
                           tasks.map((tt) =>
-                            t.id === tt.id ? { ...tt, start, end } : tt,
-                          ),
+                            t.id === tt.id ? { ...tt, start, end } : tt
+                          )
                         );
                       }
                     }}
