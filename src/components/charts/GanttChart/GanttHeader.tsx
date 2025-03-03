@@ -33,7 +33,7 @@ export function GanttHeader({
 
   return (
     <div
-      className="overflow-x-hidden"
+      className="overflow-x-hidden sticky top-0 bg-white z-10"
       style={{
         minWidth:
           pixelInMinResolution *

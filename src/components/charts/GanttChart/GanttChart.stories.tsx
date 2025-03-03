@@ -445,10 +445,27 @@ export const GanttChartStory: Story = () => {
           )}`
       )
   );
+  const resources = [
+    { id: "1", name: "John Doe" },
+    { id: "2", name: "Jane Smith" },
+    { id: "3", name: "Mike Johnson" },
+    { id: "4", name: "Sarah Williams" },
+    { id: "5", name: "Alex Brown" },
+  ];
   return (
     <div style={{ width: "100%", height: "500px" }}>
       <GanttChart
+        style={{
+          taskHeight: 40,
+          stepWidth: 80,
+          headerHeight: 60,
+        }}
         tasks={tasks}
+        resources={resources}
+        editing={{
+          isEnabled: true,
+          isBatch: true,
+        }}
         columns={[
           { field: "name", label: "Name" },
           {

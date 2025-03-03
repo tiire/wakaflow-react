@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
@@ -19,6 +18,7 @@ interface ToolbarProps {
     expandAll: boolean;
     collapseAll: boolean;
   };
+  leftToolbar?: React.ReactNode;
 }
 
 export function GanttToolbar({
@@ -26,6 +26,7 @@ export function GanttToolbar({
   onZoomOut,
   onExpandAll,
   onCollapseAll,
+  leftToolbar,
   actionsEnabled = {
     zoomIn: true,
     zoomOut: true,
@@ -34,7 +35,7 @@ export function GanttToolbar({
   },
 }: ToolbarProps) {
   return (
-    <div className="w-full bg-background border-b flex justify-left">
+    <div className="w-full bg-background border-b flex justify-between">
       <div className="container px-4">
         <div className="flex items-center h-12">
           <div className="flex space-x-2">
@@ -105,6 +106,7 @@ export function GanttToolbar({
           </div>
         </div>
       </div>
+      {leftToolbar || <div className="flex-1" />}
     </div>
   );
 }

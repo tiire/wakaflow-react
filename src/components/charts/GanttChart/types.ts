@@ -16,6 +16,22 @@ import {
   startOfHour,
 } from "date-fns";
 
+export const resolutionArray: Resolution[] = [
+  "hour",
+  "day",
+  "week",
+  "month",
+  "year",
+];
+
+export const stepForResolution: Record<Resolution, number> = {
+  hour: 60 * 60 * 1000,
+  day: 24 * 60 * 60 * 1000,
+  week: 7 * 24 * 60 * 60 * 1000,
+  month: 30 * 24 * 60 * 60 * 1000,
+  year: 365 * 24 * 60 * 60 * 1000,
+};
+
 export type Task = {
   id: string;
   parentId: string | null;
@@ -23,7 +39,11 @@ export type Task = {
   start?: Date;
   end?: Date;
   dependsOn: string[];
-  assignees: string[];
+  assignees: {
+    id: string;
+    name: string;
+    [key: string]: any;
+  }[];
   [key: string]: any;
 };
 
@@ -153,4 +173,10 @@ export const resolutionMap: Record<
       return addDays(date, count);
     },
   },
+};
+
+export type FilledTask = Task & {
+  start: Date;
+  end: Date;
+  children: FilledTask[];
 };
